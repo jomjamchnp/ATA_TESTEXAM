@@ -5,6 +5,7 @@ import io.restassured.response.Response;
 import org.testng.Assert;
 import org.testng.annotations.*;
 import utils.RequestHelper;
+import utils.TestDataLoader;
 import utils.UserPayload;
 
 import java.util.HashMap;
@@ -18,7 +19,7 @@ import java.util.UUID;
  *
  * Test order is fixed so that:
  *   1. GET  — reads an existing user & counts active users
- *   2. POST — creates a new user (inactive)
+ *   2. POST — creates a new user 
  *   3. PUT  — updates that user to active, compares active-user count
  *   4. DELETE — deletes the user, verifies 404
  */
@@ -33,8 +34,8 @@ public class UserApiTest {
     private static String createdUserEmail;
     private static int    activeUserCountBefore; // captured in GET test
     
-    // A fixed existing user ID for the GET test 
-    private static final int EXISTING_USER_ID = 8414023;
+    // Loaded from testData.json
+    private static final int EXISTING_USER_ID = TestDataLoader.getExistingUserId();
 
     // ----------------------------------------------------------------
     // Helper — generate unique email to avoid GoRest duplicate errors
@@ -68,7 +69,6 @@ public class UserApiTest {
         System.out.println("✅ GET user — id: " + id + " | name: " + name + " | email: " + email);
 
         // Validate how many user which status = active
-        // GoRest paginates results (max 100 per page).
         Map<String, Object> params = new HashMap<>();
         params.put("status", "active");
         params.put("per_page", 1); 
@@ -85,7 +85,7 @@ public class UserApiTest {
  
         activeUserCountBefore = Integer.parseInt(totalHeader);
  
-        System.out.println("✅ Total active users: "+ activeUserCountBefore); //2922
+        System.out.println("✅ Total active users: "+ activeUserCountBefore); 
     }
 
     // ================================================================
@@ -94,17 +94,12 @@ public class UserApiTest {
     @Test(priority = 2)
     @Story("POST User")
     @Severity(SeverityLevel.CRITICAL)
-    @Description("Create a new user with status=inactive. Validate 201 and all payload fields. Confirm with GET.")
+    @Description("Create a new user with sample payload. Validate 201 and all payload fields. Confirm with GET.")
     public void testCreateUser() {
 
         createdUserEmail = uniqueEmail();
 
-        UserPayload payload = new UserPayload(
-                "John Doe",
-                createdUserEmail,
-                "male",
-                "inactive"    
-        );
+        UserPayload payload = TestDataLoader.getCreateUserPayload(createdUserEmail);
 
         Response postResponse = RequestHelper.post("/users", payload);
 
@@ -119,6 +114,10 @@ public class UserApiTest {
                 "Response email must match payload");
         Assert.assertEquals(postResponse.jsonPath().getString("gender"), payload.getGender(),
                 "Response gender must match payload");
+        // NOTE: testData.json uses "status": "active" to match the assignment sample payload,
+        // but the requirement states the POST response must be "inactive".
+        // The assertion reflects the requirement — if the API returns "active", this test will
+        // intentionally fail, proving the validation correctly catches the mismatch.
         Assert.assertEquals(postResponse.jsonPath().getString("status"), "inactive",
                 "Response status must be 'inactive'");
 
@@ -138,7 +137,7 @@ public class UserApiTest {
         Assert.assertEquals(getResponse.jsonPath().getString("gender"),   payload.getGender(),
                 "GET gender must match POST payload");
         Assert.assertEquals(getResponse.jsonPath().getString("status"),   "inactive",
-                "GET status must be 'inactive'");
+                "GET status must be 'inactive' (see POST assertion note above)");
 
         System.out.println("✅ GET after POST confirmed — user is valid and consistent");
     }
@@ -146,20 +145,15 @@ public class UserApiTest {
     // ================================================================
     // TEST 3 — PUT /users/{id}
     // ================================================================
-    @Test(priority = 3, dependsOnMethods = "testCreateUser")
+    @Test(priority = 3)
     @Story("PUT User")
     @Severity(SeverityLevel.CRITICAL)
-    @Description("Update user name, email, and status to active. Validate response and compare active user count.")
+    @Description("Update user name, email. Validate response and compare active user count.")
     public void testUpdateUser() {
 
         String updatedEmail = uniqueEmail();
 
-        UserPayload updatePayload = new UserPayload(
-                "Jane Doe",          // updated name
-                updatedEmail,        // updated email
-                "male",
-                "active"             // ✅ task requires status=active after PUT
-        );
+        UserPayload updatePayload = TestDataLoader.getUpdateUserPayload(updatedEmail);
 
         // ---- 3a. PUT request ----
         Response putResponse = RequestHelper.put("/users/" + createdUserId, updatePayload);
@@ -167,9 +161,9 @@ public class UserApiTest {
         Assert.assertEquals(putResponse.getStatusCode(), 200,
                 "Expected status code 200 for PUT /users/{id}");
 
-        Assert.assertEquals(putResponse.jsonPath().getString("name"),   "Jane Doe",
-                "Updated name must be 'Jane Doe'");
-        Assert.assertEquals(putResponse.jsonPath().getString("email"),  updatedEmail,
+        Assert.assertEquals(putResponse.jsonPath().getString("name"),   updatePayload.getName(),
+                "Updated name must match payload");
+        Assert.assertEquals(putResponse.jsonPath().getString("email"),  updatePayload.getEmail(),
                 "Updated email must match payload");
         Assert.assertEquals(putResponse.jsonPath().getString("status"), "active",
                 "Updated status must be 'active'");
@@ -211,7 +205,7 @@ public class UserApiTest {
                 "Updated user (id: " + createdUserId + ") must appear in GET /users?status=active list");
 
         Map<String, Object> activeUser = matchedUsers.get(0);
-        Assert.assertEquals(activeUser.get("name"), "Jane Doe",
+        Assert.assertEquals(activeUser.get("name"), updatePayload.getName(),
                 "User name in active list must match updated payload");
         Assert.assertEquals(activeUser.get("email"), updatePayload.getEmail(),
                 "User email in active list must match updated payload");
@@ -222,7 +216,7 @@ public class UserApiTest {
     // ================================================================
     // TEST 4 — DELETE /users/{id}
     // ================================================================
-    @Test(priority = 4, dependsOnMethods = "testCreateUser")
+    @Test(priority = 4)
     @Story("DELETE User")
     @Severity(SeverityLevel.CRITICAL)
     @Description("Delete the created user. Validate 204. Then GET the user and expect 404.")

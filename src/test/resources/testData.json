@@ -1,0 +1,13 @@
+{
+  "existingUserId": 8414023,
+  "createUser": {
+    "name": "John Doe",
+    "gender": "male",
+    "status": "active"
+  },
+  "updateUser": {
+    "name": "Jane Doe",
+    "gender": "male",
+    "status": "active"
+  }
+}

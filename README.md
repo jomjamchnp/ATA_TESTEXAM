@@ -135,11 +135,8 @@ After running `mvn allure:serve`, the report shows:
 | -------- | ----- | ----------- |
 | `GOREST_TOKEN` | `.env` | Your GoRest Bearer token |
 | `BASE_URL` | `ApiConfig.java` | `https://gorest.co.in/public/v2` |
-| `existingUserId` | `testData.json` | User ID used in the GET test |
 | `createUser` | `testData.json` | Name, gender, and initial status for POST test |
 | `updateUser` | `testData.json` | Name, gender, and updated status for PUT test |
-
-> If the GET test fails with 404, update `existingUserId` in `src/test/resources/testData.json` to a valid user ID from GoRest. No code changes needed.
 
 ---
 

@@ -17,8 +17,10 @@ gorest-api-tests/
 │       │   └── utils/
 │       │       ├── ApiConfig.java         # Base URL & token config (reads .env)
 │       │       ├── RequestHelper.java     # Reusable HTTP methods
+│       │       ├── TestDataLoader.java    # Loads test data from testData.json
 │       │       └── UserPayload.java       # User request/response model
 │       └── resources/
+│           ├── testData.json              # Externalized test data (user IDs & payloads)
 │           └── testng.xml                 # TestNG suite configuration
 ├── .env                                   # Your local token (git-ignored)
 ├── .env.example                           # Template — commit this, not .env
@@ -133,15 +135,19 @@ After running `mvn allure:serve`, the report shows:
 | -------- | ----- | ----------- |
 | `GOREST_TOKEN` | `.env` | Your GoRest Bearer token |
 | `BASE_URL` | `ApiConfig.java` | `https://gorest.co.in/public/v2` |
-| `EXISTING_USER_ID` | `UserApiTest.java` | Hardcoded user ID for the GET test |
+| `existingUserId` | `testData.json` | User ID used in the GET test |
+| `createUser` | `testData.json` | Name, gender, and initial status for POST test |
+| `updateUser` | `testData.json` | Name, gender, and updated status for PUT test |
 
-> If the GET test fails with 404, update `EXISTING_USER_ID` in `UserApiTest.java` to a valid user ID from GoRest.
+> If the GET test fails with 404, update `existingUserId` in `src/test/resources/testData.json` to a valid user ID from GoRest. No code changes needed.
 
 ---
 
 ## 📝 Notes
 
-- Each test run creates a **new unique user** (random email) to avoid duplicate conflicts.
+- Each test run generates a **random unique email** (UUID-based) for the created user to prevent GoRest duplicate-email rejections across runs.
+- `testData.json` stores the base payload for POST and PUT. The `status` field in `createUser` follows the assignment sample (`"active"`), but the POST assertion validates `"inactive"` per the requirement — a mismatch will cause a deliberate test failure to surface the discrepancy.
 - Tests run in fixed order: GET → POST → PUT → DELETE.
 - PUT and DELETE tests depend on POST completing successfully.
+- Test data (user IDs and payloads) is managed in `src/test/resources/testData.json` — no code changes needed for data adjustments.
 - Never commit your `.env` file — use `.env.example` as the template for other contributors.

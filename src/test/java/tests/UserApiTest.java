@@ -82,7 +82,7 @@ public class UserApiTest {
                 "Expected status code 200 when fetching active users");
  
         String totalHeader = activeResponse.getHeader("X-Pagination-Total");
- 
+        
         Assert.assertNotNull(totalHeader,
                 "X-Pagination-Total header must be present in response");
  
@@ -158,7 +158,6 @@ public class UserApiTest {
 
         UserPayload updatePayload = TestDataLoader.getUpdateUserPayload(updatedEmail);
 
-        // ---- 3a. PUT request ----
         Response putResponse = RequestHelper.put("/users/" + createdUserId, updatePayload);
 
         Assert.assertEquals(putResponse.getStatusCode(), 200,
@@ -191,9 +190,8 @@ public class UserApiTest {
                 + " | before: " + activeUserCountBefore);
 
         // compare number of user from 1.       
-        Assert.assertTrue(activeUserCountAfter > activeUserCountBefore,
-                "Active user count should increase after updating user status to active. "
-                + "Before: " + activeUserCountBefore + " | After: " + activeUserCountAfter);
+        Assert.assertEquals(activeUserCountAfter, activeUserCountBefore + 1,"Active user count should increase by 1 after PUT");
+        System.out.println("✅ count should increase by 1");
 
         // check new user match the payload — query by specific ID to avoid pagination issues
         Map<String, Object> userParams = new HashMap<>();

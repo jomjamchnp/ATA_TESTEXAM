@@ -24,10 +24,6 @@ public class TestDataLoader {
         }
     }
 
-    public static int getExistingUserId() {
-        return root.get("existingUserId").asInt();
-    }
-
     public static UserPayload getCreateUserPayload(String email) {
         JsonNode node = root.get("createUser");
         return new UserPayload(

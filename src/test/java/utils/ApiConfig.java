@@ -3,7 +3,6 @@ import io.github.cdimascio.dotenv.Dotenv;
 
 /**
  * Central configuration for GoRest API.
- * Replace BEARER_TOKEN with your actual GoRest API token.
  */
 public class ApiConfig {
 

@@ -19,7 +19,7 @@ import java.util.UUID;
  *
  * Test order is fixed so that:
  *   1. GET  — reads an existing user & counts active users
- *   2. POST — creates a new user 
+ *   2. POST — creates a new user with sample payload
  *   3. PUT  — updates that user to active, compares active-user count
  *   4. DELETE — deletes the user, verifies 404
  */
@@ -33,9 +33,6 @@ public class UserApiTest {
     private static int    createdUserId;
     private static String createdUserEmail;
     private static int    activeUserCountBefore; // captured in GET test
-    
-    // Loaded from testData.json
-    private static final int EXISTING_USER_ID = TestDataLoader.getExistingUserId();
 
     // ----------------------------------------------------------------
     // Helper — generate unique email to avoid GoRest duplicate errors
@@ -52,6 +49,12 @@ public class UserApiTest {
     @Severity(SeverityLevel.CRITICAL)
     @Description("Fetch a specific user by ID. Validate status 200 and required fields. Count ALL active users via X-Pagination-Total header.")
     public void testGetUserById() {
+
+        // In testGetUserById(), replace the hardcoded ID lookup with:
+        Response listResponse = RequestHelper.getWithParams("/users",
+        Map.of("status", "active", "per_page", 1));
+        int EXISTING_USER_ID = listResponse.jsonPath().getInt("[0].id");
+        System.out.println("✅ Fetched an existing active user ID for testing: " + EXISTING_USER_ID);
 
         Response response = RequestHelper.get("/users/" + EXISTING_USER_ID);
         //Verify the status code is 200.

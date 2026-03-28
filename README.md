@@ -148,6 +148,5 @@ After running `mvn allure:serve`, the report shows:
 - Each test run generates a **random unique email** (UUID-based) for the created user to prevent GoRest duplicate-email rejections across runs.
 - `testData.json` stores the base payload for POST and PUT. The `status` field in `createUser` follows the assignment sample (`"active"`), but the POST assertion validates `"inactive"` per the requirement — a mismatch will cause a deliberate test failure to surface the discrepancy.
 - Tests run in fixed order: GET → POST → PUT → DELETE.
-- PUT and DELETE tests depend on POST completing successfully.
 - Test data (user IDs and payloads) is managed in `src/test/resources/testData.json` — no code changes needed for data adjustments.
 - Never commit your `.env` file — use `.env.example` as the template for other contributors.

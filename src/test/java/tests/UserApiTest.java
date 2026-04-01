@@ -50,9 +50,7 @@ public class UserApiTest {
     @Description("Fetch a specific user by ID. Validate status 200 and required fields. Count ALL active users via X-Pagination-Total header.")
     public void testGetUserById() {
 
-        // In testGetUserById(), replace the hardcoded ID lookup with:
-        Response listResponse = RequestHelper.getWithParams("/users",
-        Map.of("status", "active", "per_page", 1));
+        Response listResponse = RequestHelper.getWithParams("/users", Map.of("status", "active", "per_page", 1));
         int EXISTING_USER_ID = listResponse.jsonPath().getInt("[0].id");
         System.out.println("✅ Fetched an existing active user ID for testing: " + EXISTING_USER_ID);
 
@@ -74,7 +72,6 @@ public class UserApiTest {
         // Validate how many user which status = active
         Map<String, Object> params = new HashMap<>();
         params.put("status", "active");
-        params.put("per_page", 1); 
  
         Response activeResponse = RequestHelper.getWithParams("/users", params);
  
@@ -105,10 +102,9 @@ public class UserApiTest {
         UserPayload payload = TestDataLoader.getCreateUserPayload(createdUserEmail);
 
         Response postResponse = RequestHelper.post("/users", payload);
-
+        //Verify the status code is 201.
         Assert.assertEquals(postResponse.getStatusCode(), 201,
                 "Expected status code 201 for POST /users");
-        //Verify the status code is 201.
         createdUserId = postResponse.jsonPath().getInt("id");
 
         Assert.assertEquals(postResponse.jsonPath().getString("name"),   payload.getName(),
@@ -126,7 +122,7 @@ public class UserApiTest {
 
         System.out.println("✅ POST user created — id: " + createdUserId + " | email: " + createdUserEmail);
 
-        //Validate the new user is valid by using GET request reponse compare with POST reponse body
+        //Validate the new user is valid by using GET request reponse compare with POST response body
         Response getResponse = RequestHelper.get("/users/" + createdUserId);
         //Validate the response body matches the payload values name, email,gender, status (status must be inactive)
         Assert.assertEquals(getResponse.getStatusCode(), 200,
